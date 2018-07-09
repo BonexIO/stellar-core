@@ -50,7 +50,7 @@ enum AccountType
     VENDOR = 1,
     MERCHANT = 2,
     CLIENT = 3
-}
+};
 
 // price in fractional representation
 struct Price

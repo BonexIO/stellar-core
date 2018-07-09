@@ -29,14 +29,7 @@ enum OperationType
     BUMP_SEQUENCE = 11
 };
 
-// Defines account roles 
-enum AccountType 
-{
-    FOUNDATION = 0,
-    VENDOR = 1,
-    MERCHANT = 2,
-    CLIENT = 3
-}
+
 
 /* CreateAccount
 Creates and funds a new account with the specified starting balance.
