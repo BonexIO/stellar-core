@@ -42,7 +42,26 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
         AccountFrame::loadAccount(delta, mCreateAccount.destination, db);
     if (!destAccount)
     {
-        if (mCreateAccount.startingBalance < ledgerManager.getMinBalance(0))
+        
+        /*
+            Check for right autorization
+            FOUNDATION 0
+            VENDOR 1
+            MERCHANT 2
+            CLIENT 3
+            FOUNDATION < VENDOR < MERCHANT < CLIENT 
+            if source level is higher than new account created,
+            then validation failed
+        */
+
+        // AccountType sourceType = ;
+
+        if(mSourceAccount->getAccountType() >= mCreateAccount.accType)
+        {
+            return false;
+        }
+
+        else if (mCreateAccount.startingBalance < ledgerManager.getMinBalance(0))
         { // not over the minBalance to make an account
             app.getMetrics()
                 .NewMeter({"op-create-account", "failure", "low-reserve"},
@@ -77,6 +96,7 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
             destAccount->getAccount().seqNum =
                 delta.getHeaderFrame().getStartingSequenceNumber();
             destAccount->getAccount().balance = mCreateAccount.startingBalance;
+            destAccount->getAccount().accType = mCreateAccount.accType;
 
             destAccount->storeAdd(delta, db);
 
@@ -123,25 +143,7 @@ CreateAccountOpFrame::doCheckValid(Application& app)
         innerResult().code(CREATE_ACCOUNT_MALFORMED);
         return false;
     }
-
-   /*
-    Check for right autorization
-    FOUNDATION 0
-    VENDOR 1
-    MERCHANT 2
-    CLIENT 3
-    FOUNDATION < VENDOR < MERCHANT < CLIENT 
-    if source level is higher than new account created,
-    then validation failed
-   */
-
-    AccountType sourceType = mSourceAccount->getAccountType();
-
-    if(sourceType >= mCreateAccount.accType)
-    {
-        return false;
-    }
-
+    
     return true;
 }
 }
