@@ -77,6 +77,9 @@ AccountFrame::AccountFrame(AccountID const& id) : AccountFrame()
     mAccountEntry.accountID = id;
 }
 
+
+
+
 AccountFrame::pointer
 AccountFrame::makeAuthOnlyAccount(AccountID const& id)
 {
@@ -87,10 +90,19 @@ AccountFrame::makeAuthOnlyAccount(AccountID const& id)
     return ret;
 }
 
+AccountType
+AccountFrame::getAccountType() 
+{
+    // AccountType acc = mAccountEntry.accType;
+    // // if(acc == )
+    return mAccountEntry.accType;
+    // return 1;
+}
+
 bool
 AccountFrame::signerCompare(Signer const& s1, Signer const& s2)
 {
-    return s1.key < s2.key;
+    // return s1.key < s2.key;
 }
 
 void

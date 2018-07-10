@@ -25,10 +25,14 @@ class LedgerRange;
 
 class AccountFrame : public EntryFrame
 {
+    
+
     void storeUpdate(LedgerDelta& delta, Database& db, bool insert);
     bool mUpdateSigners;
 
     AccountEntry& mAccountEntry;
+
+    
 
     void normalize();
 
@@ -43,6 +47,9 @@ class AccountFrame : public EntryFrame
     AccountFrame(LedgerEntry const& from);
     AccountFrame(AccountFrame const& from);
     AccountFrame(AccountID const& id);
+
+    // Get account type
+    AccountType getAccountType();
 
     // builds an accountFrame for the sole purpose of authentication
     static AccountFrame::pointer makeAuthOnlyAccount(AccountID const& id);
