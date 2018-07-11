@@ -52,6 +52,7 @@ enum AccountType
     CLIENT = 3
 };
 
+
 // price in fractional representation
 struct Price
 {
@@ -119,7 +120,7 @@ struct AccountEntry
     AccountID* inflationDest; // Account to vote for during inflation
     uint32 flags;             // see AccountFlags
 
-    AccountType accType;      // Account role
+    uint32 accountType;           // Account role
 
     string32 homeDomain; // can be used for reverse federation and memo lookup
 

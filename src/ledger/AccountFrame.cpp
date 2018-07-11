@@ -77,7 +77,11 @@ AccountFrame::AccountFrame(AccountID const& id) : AccountFrame()
     mAccountEntry.accountID = id;
 }
 
-
+AccountFrame::AccountFrame(AccountID const& id, int accountType) : AccountFrame()
+{
+    mAccountEntry.accountID = id;
+    mAccountEntry.accountType = accountType;
+}
 
 
 AccountFrame::pointer
@@ -90,19 +94,19 @@ AccountFrame::makeAuthOnlyAccount(AccountID const& id)
     return ret;
 }
 
-AccountType
+int32
 AccountFrame::getAccountType() 
 {
-    // AccountType acc = mAccountEntry.accType;
+
     // // if(acc == )
-    return mAccountEntry.accType;
+    return mAccountEntry.accountType;
     // return 1;
 }
 
 bool
 AccountFrame::signerCompare(Signer const& s1, Signer const& s2)
 {
-    // return s1.key < s2.key;
+    return s1.key < s2.key;
 }
 
 void

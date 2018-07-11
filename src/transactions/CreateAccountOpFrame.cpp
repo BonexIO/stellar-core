@@ -56,7 +56,7 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
 
         // AccountType sourceType = ;
 
-        if(mSourceAccount->getAccountType() >= mCreateAccount.accType)
+        if(mSourceAccount->getAccountType() >= mCreateAccount.accountType)
         {
             return false;
         }
@@ -96,7 +96,7 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
             destAccount->getAccount().seqNum =
                 delta.getHeaderFrame().getStartingSequenceNumber();
             destAccount->getAccount().balance = mCreateAccount.startingBalance;
-            destAccount->getAccount().accType = mCreateAccount.accType;
+            destAccount->getAccount().accountType = mCreateAccount.accountType;
 
             destAccount->storeAdd(delta, db);
 

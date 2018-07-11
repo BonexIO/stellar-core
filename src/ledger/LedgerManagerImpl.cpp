@@ -208,7 +208,9 @@ LedgerManagerImpl::startNewLedger(LedgerHeader genesisLedger)
     SecretKey skey = SecretKey::fromSeed(mApp.getNetworkID());
 
     AccountFrame masterAccount(skey.getPublicKey());
+    // AccountFrame masterAccount(skey.getPublicKey(), 0);
     masterAccount.getAccount().balance = genesisLedger.totalCoins;
+    // masterAccount.getAccount().accountType = 0;
     LedgerDelta delta(genesisLedger, getDatabase());
     masterAccount.storeAdd(delta, this->getDatabase());
     delta.commit();

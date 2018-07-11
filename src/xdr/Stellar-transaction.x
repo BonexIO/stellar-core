@@ -45,7 +45,7 @@ struct CreateAccountOp
 {
     AccountID destination; // account to create
     int64 startingBalance; // amount they end up with
-    AccountType accType; // role of the account
+    uint32 accountType; // role of the account
 
 };
 

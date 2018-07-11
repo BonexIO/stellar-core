@@ -47,9 +47,9 @@ class AccountFrame : public EntryFrame
     AccountFrame(LedgerEntry const& from);
     AccountFrame(AccountFrame const& from);
     AccountFrame(AccountID const& id);
-
+    AccountFrame(AccountID const& id, int accountType);
     // Get account type
-    AccountType getAccountType();
+    int32 getAccountType();
 
     // builds an accountFrame for the sole purpose of authentication
     static AccountFrame::pointer makeAuthOnlyAccount(AccountID const& id);
