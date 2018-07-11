@@ -207,8 +207,8 @@ LedgerManagerImpl::startNewLedger(LedgerHeader genesisLedger)
     auto ledgerTime = mLedgerClose.TimeScope();
     SecretKey skey = SecretKey::fromSeed(mApp.getNetworkID());
 
-    AccountFrame masterAccount(skey.getPublicKey());
-    // AccountFrame masterAccount(skey.getPublicKey(), 0);
+    // AccountFrame masterAccount(skey.getPublicKey());
+    AccountFrame masterAccount(skey.getPublicKey(), 0);
     masterAccount.getAccount().balance = genesisLedger.totalCoins;
     // masterAccount.getAccount().accountType = 0;
     LedgerDelta delta(genesisLedger, getDatabase());
