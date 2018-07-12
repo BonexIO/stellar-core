@@ -26,6 +26,7 @@ const char* AccountFrame::kSQLCreateStatement1 =
     "CREATE TABLE accounts"
     "("
     "accountid       VARCHAR(56)  PRIMARY KEY,"
+    "accounttype     INT          NOT NULL,"
     "balance         BIGINT       NOT NULL CHECK (balance >= 0),"
     "seqnum          BIGINT       NOT NULL,"
     "numsubentries   INT          NOT NULL CHECK (numsubentries >= 0),"
@@ -40,6 +41,7 @@ const char* AccountFrame::kSQLCreateStatement2 =
     "CREATE TABLE signers"
     "("
     "accountid       VARCHAR(56) NOT NULL,"
+    "accounttype     INT         NOT NULL,"
     "publickey       VARCHAR(56) NOT NULL,"
     "weight          INT         NOT NULL,"
     "PRIMARY KEY (accountid, publickey)"
@@ -97,10 +99,7 @@ AccountFrame::makeAuthOnlyAccount(AccountID const& id)
 int32
 AccountFrame::getAccountType() 
 {
-
-    // // if(acc == )
     return mAccountEntry.accountType;
-    // return 1;
 }
 
 bool
@@ -244,7 +243,7 @@ AccountFrame::loadAccount(AccountID const& accountID, Database& db)
     AccountEntry& account = res->getAccount();
 
     auto prep =
-        db.getPreparedStatement("SELECT balance, seqnum, numsubentries, "
+        db.getPreparedStatement("SELECT balance, accounttype, seqnum, numsubentries, "
                                 "inflationdest, homedomain, thresholds, "
                                 "flags, lastmodified "
                                 "FROM accounts WHERE accountid=:v1");
@@ -444,10 +443,10 @@ AccountFrame::storeUpdate(LedgerDelta& delta, Database& db, bool insert)
     if (insert)
     {
         sql = std::string(
-            "INSERT INTO accounts ( accountid, balance, seqnum, "
+            "INSERT INTO accounts ( accountid, balance, accounttype, seqnum, "
             "numsubentries, inflationdest, homedomain, thresholds, flags, "
             "lastmodified ) "
-            "VALUES ( :id, :v1, :v2, :v3, :v4, :v5, :v6, :v7, :v8 )");
+            "VALUES ( :id, :v1, :v2, :v3, :v4, :v5, :v6, :v7, :v8, :v9 )");
     }
     else
     {
@@ -475,14 +474,15 @@ AccountFrame::storeUpdate(LedgerDelta& delta, Database& db, bool insert)
         soci::statement& st = prep.statement();
         st.exchange(use(actIDStrKey, "id"));
         st.exchange(use(mAccountEntry.balance, "v1"));
-        st.exchange(use(mAccountEntry.seqNum, "v2"));
-        st.exchange(use(mAccountEntry.numSubEntries, "v3"));
-        st.exchange(use(inflationDestStrKey, inflation_ind, "v4"));
+        st.exchange(use(mAccountEntry.accountType, "v2"));
+        st.exchange(use(mAccountEntry.seqNum, "v3"));
+        st.exchange(use(mAccountEntry.numSubEntries, "v4"));
+        st.exchange(use(inflationDestStrKey, inflation_ind, "v5"));
         string homeDomain(mAccountEntry.homeDomain);
-        st.exchange(use(homeDomain, "v5"));
-        st.exchange(use(thresholds, "v6"));
-        st.exchange(use(mAccountEntry.flags, "v7"));
-        st.exchange(use(getLastModified(), "v8"));
+        st.exchange(use(homeDomain, "v6"));
+        st.exchange(use(thresholds, "v7"));
+        st.exchange(use(mAccountEntry.flags, "v8"));
+        st.exchange(use(getLastModified(), "v9"));
         st.define_and_bind();
         {
             auto timer = insert ? db.getInsertTimer("account")

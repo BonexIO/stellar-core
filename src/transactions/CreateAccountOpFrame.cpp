@@ -17,6 +17,10 @@
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
 
+#include <string>       // std::string
+#include <iostream>     // std::cout
+#include <sstream>   
+
 namespace stellar
 {
 
@@ -54,9 +58,16 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
             then validation failed
         */
 
-        // AccountType sourceType = ;
 
-        if(mSourceAccount->getAccountType() > mCreateAccount.accountType)
+
+        // AccountFrame::pointer const lSourceAcc = getSourceAccount();
+//        if(mSourceAccount->getAccount().accountType > mCreateAccount.accountType)
+        cout << "mSourceAccount TYPE: " << mSourceAccount->getAccount().accountType << " end of line\n";
+        // cout << "mSourceAccount key: " << getSourceID().ed25519 << " end of line\n";
+        cout << "mCreateAccount TYPE: " << mCreateAccount.accountType << " end of line\n";
+        if(mSourceAccount->getAccount().accountType == CLIENT
+            || (mSourceAccount->getAccount().accountType == MERCHANT && (mCreateAccount.accountType == FOUNDATION || mCreateAccount.accountType == VENDOR))
+            || (mSourceAccount->getAccount().accountType == VENDOR && mCreateAccount.accountType == FOUNDATION) )
         {
             app.getMetrics()
                 .NewMeter({"op-create-account", "failure", "underauthorized"}, 
@@ -102,6 +113,7 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
                 delta.getHeaderFrame().getStartingSequenceNumber();
             destAccount->getAccount().balance = mCreateAccount.startingBalance;
             destAccount->getAccount().accountType = mCreateAccount.accountType;
+            cout << "destAccount type: " << destAccount->getAccount().accountType << " end of line\n";
 
             destAccount->storeAdd(delta, db);
 
