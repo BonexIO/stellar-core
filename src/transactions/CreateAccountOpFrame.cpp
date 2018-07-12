@@ -127,6 +127,17 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
 bool
 CreateAccountOpFrame::doCheckValid(Application& app)
 {
+    if(mSourceAccount->getAccountType() > mCreateAccount.accountType)
+    {
+        app.getMetrics()
+            .NewMeter({"op-create-account", "invalid", "underauthorized"}, 
+                    "operation")
+            .Mark();
+        innerResult().code(CREATE_ACCOUNT_UNDERAUTHORIZED);
+        return false;
+    }
+
+
     if (mCreateAccount.startingBalance <= 0)
     {
         app.getMetrics()
