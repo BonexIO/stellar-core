@@ -303,8 +303,9 @@ AccountFrame::loadSigners(Database& db, std::string const& actIDStrKey)
     string pubKey;
     Signer signer;
 
+
+// auto prep2 = db.getPreparedStatement("SELECT publickey, weight, signertype FROM "
     auto prep2 = db.getPreparedStatement("SELECT publickey, weight FROM "
-    // auto prep2 = db.getPreparedStatement("SELECT publickey, weight, signertype FROM "
                                          "signers WHERE accountid =:id");
     auto& st2 = prep2.statement();
     st2.exchange(use(actIDStrKey));
@@ -446,18 +447,18 @@ AccountFrame::storeUpdate(LedgerDelta& delta, Database& db, bool insert)
     if (insert)
     {
         sql = std::string(
-            "INSERT INTO accounts ( accountid, balance, accounttype, seqnum, "
+            "INSERT INTO accounts ( accountid, balance, seqnum, "
             "numsubentries, inflationdest, homedomain, thresholds, flags, "
-            "lastmodified ) "
-            "VALUES ( :id, :v1, :v2, :v3, :v4, :v5, :v6, :v7, :v8, :v9 )");
+            "lastmodified, accounttype, ) "
+            "VALUES ( :id, :v1, :v2, :v3, :v4, :v5, :v6, :v7, :v8, :acctype )");
     }
     else
     {
         sql = std::string(
-            "UPDATE accounts SET balance = :v1, seqnum = :v2, "
-            "accounttype = :v3, numsubentries = :v4, "
-            "inflationdest = :v5, homedomain = :v6, thresholds = :v7, "
-            "flags = :v8, lastmodified = :v9 WHERE accountid = :id");
+            "UPDATE accounts SET balance = :v1,
+            "seqnum = :v2, numsubentries = :v3, "
+            "inflationdest = :v4, homedomain = :v5, thresholds = :v6, "
+            "flags = :v7, lastmodified = :v8 WHERE accountid = :id");
     }
 
     auto prep = db.getPreparedStatement(sql);
@@ -477,15 +478,16 @@ AccountFrame::storeUpdate(LedgerDelta& delta, Database& db, bool insert)
         soci::statement& st = prep.statement();
         st.exchange(use(actIDStrKey, "id"));
         st.exchange(use(mAccountEntry.balance, "v1"));
-        st.exchange(use(mAccountEntry.accountType, "v2"));
-        st.exchange(use(mAccountEntry.seqNum, "v3"));
-        st.exchange(use(mAccountEntry.numSubEntries, "v4"));
-        st.exchange(use(inflationDestStrKey, inflation_ind, "v5"));
+        if(insert)
+            st.exchange(use(mAccountEntry.accountType, "acctype"));
+        st.exchange(use(mAccountEntry.seqNum, "v2"));
+        st.exchange(use(mAccountEntry.numSubEntries, "v3"));
+        st.exchange(use(inflationDestStrKey, inflation_ind, "v4"));
         string homeDomain(mAccountEntry.homeDomain);
-        st.exchange(use(homeDomain, "v6"));
-        st.exchange(use(thresholds, "v7"));
-        st.exchange(use(mAccountEntry.flags, "v8"));
-        st.exchange(use(getLastModified(), "v9"));
+        st.exchange(use(homeDomain, "v5"));
+        st.exchange(use(thresholds, "v6"));
+        st.exchange(use(mAccountEntry.flags, "v7"));
+        st.exchange(use(getLastModified(), "v8"));
         st.define_and_bind();
         {
             auto timer = insert ? db.getInsertTimer("account")
