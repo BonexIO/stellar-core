@@ -449,13 +449,13 @@ AccountFrame::storeUpdate(LedgerDelta& delta, Database& db, bool insert)
         sql = std::string(
             "INSERT INTO accounts ( accountid, balance, seqnum, "
             "numsubentries, inflationdest, homedomain, thresholds, flags, "
-            "lastmodified, accounttype, ) "
+            "lastmodified, accounttype) "
             "VALUES ( :id, :v1, :v2, :v3, :v4, :v5, :v6, :v7, :v8, :acctype )");
     }
     else
     {
         sql = std::string(
-            "UPDATE accounts SET balance = :v1,
+            "UPDATE accounts SET balance = :v1, "
             "seqnum = :v2, numsubentries = :v3, "
             "inflationdest = :v4, homedomain = :v5, thresholds = :v6, "
             "flags = :v7, lastmodified = :v8 WHERE accountid = :id");
