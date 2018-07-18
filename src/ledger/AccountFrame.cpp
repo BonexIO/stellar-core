@@ -26,7 +26,7 @@ const char* AccountFrame::kSQLCreateStatement1 =
     "CREATE TABLE accounts"
     "("
     "accountid       VARCHAR(56)  PRIMARY KEY,"
-    "accounttype     INT          NOT NULL,"
+    "accounttype     INT          NOT NULL CHECK (accounttype >= 0 AND accounttype <= 3),"
     "balance         BIGINT       NOT NULL CHECK (balance >= 0),"
     "seqnum          BIGINT       NOT NULL,"
     "numsubentries   INT          NOT NULL CHECK (numsubentries >= 0),"
@@ -43,7 +43,6 @@ const char* AccountFrame::kSQLCreateStatement2 =
     "accountid       VARCHAR(56) NOT NULL,"
     "publickey       VARCHAR(56) NOT NULL,"
     "weight          INT         NOT NULL,"
-    // "signertype      INT         NOT NULL,"
     "PRIMARY KEY (accountid, publickey)"
     ");";
 
@@ -79,7 +78,7 @@ AccountFrame::AccountFrame(AccountID const& id) : AccountFrame()
     mAccountEntry.accountID = id;
 }
 
-AccountFrame::AccountFrame(AccountID const& id, int accountType) : AccountFrame()
+AccountFrame::AccountFrame(AccountID const& id, uint32 accountType) : AccountFrame()
 {
     mAccountEntry.accountID = id;
     mAccountEntry.accountType = accountType;
@@ -96,7 +95,7 @@ AccountFrame::makeAuthOnlyAccount(AccountID const& id)
     return ret;
 }
 
-int32
+uint32
 AccountFrame::getAccountType() 
 {
     return mAccountEntry.accountType;
@@ -243,13 +242,13 @@ AccountFrame::loadAccount(AccountID const& accountID, Database& db)
     AccountEntry& account = res->getAccount();
 
     auto prep =
-        db.getPreparedStatement("SELECT balance, accounttype, seqnum, numsubentries, "
+        db.getPreparedStatement("SELECT accounttype, balance, seqnum, numsubentries, "
                                 "inflationdest, homedomain, thresholds, "
                                 "flags, lastmodified "
                                 "FROM accounts WHERE accountid=:v1");
     auto& st = prep.statement();
-    st.exchange(into(account.balance));
     st.exchange(into(account.accountType));
+    st.exchange(into(account.balance));
     st.exchange(into(account.seqNum));
     st.exchange(into(account.numSubEntries));
     st.exchange(into(inflationDest, inflationDestInd));
@@ -303,15 +302,12 @@ AccountFrame::loadSigners(Database& db, std::string const& actIDStrKey)
     string pubKey;
     Signer signer;
 
-
-// auto prep2 = db.getPreparedStatement("SELECT publickey, weight, signertype FROM "
     auto prep2 = db.getPreparedStatement("SELECT publickey, weight FROM "
                                          "signers WHERE accountid =:id");
     auto& st2 = prep2.statement();
     st2.exchange(use(actIDStrKey));
     st2.exchange(into(pubKey));
     st2.exchange(into(signer.weight));
-    // st2.exchange(into(signer.signertype));
     st2.define_and_bind();
     {
         auto timer = db.getSelectTimer("signer");
@@ -447,16 +443,16 @@ AccountFrame::storeUpdate(LedgerDelta& delta, Database& db, bool insert)
     if (insert)
     {
         sql = std::string(
-            "INSERT INTO accounts ( accountid, balance, seqnum, "
+            "INSERT INTO accounts ( accountid, accounttype, balance, seqnum, "
             "numsubentries, inflationdest, homedomain, thresholds, flags, "
-            "lastmodified, accounttype) "
-            "VALUES ( :id, :v1, :v2, :v3, :v4, :v5, :v6, :v7, :v8, :acctype )");
+            "lastmodified ) "
+            "VALUES ( :id, :accType, :v1, :v2, :v3, :v4, :v5, :v6, :v7, :v8 )");
     }
     else
     {
         sql = std::string(
-            "UPDATE accounts SET balance = :v1, "
-            "seqnum = :v2, numsubentries = :v3, "
+            "UPDATE accounts SET balance = :v1, seqnum = :v2, "
+            "numsubentries = :v3, "
             "inflationdest = :v4, homedomain = :v5, thresholds = :v6, "
             "flags = :v7, lastmodified = :v8 WHERE accountid = :id");
     }
@@ -477,9 +473,9 @@ AccountFrame::storeUpdate(LedgerDelta& delta, Database& db, bool insert)
     {
         soci::statement& st = prep.statement();
         st.exchange(use(actIDStrKey, "id"));
-        st.exchange(use(mAccountEntry.balance, "v1"));
         if(insert)
-            st.exchange(use(mAccountEntry.accountType, "acctype"));
+            st.exchange(use(mAccountEntry.accountType, "accType"));
+        st.exchange(use(mAccountEntry.balance, "v1"));
         st.exchange(use(mAccountEntry.seqNum, "v2"));
         st.exchange(use(mAccountEntry.numSubEntries, "v3"));
         st.exchange(use(inflationDestStrKey, inflation_ind, "v4"));
@@ -561,12 +557,10 @@ AccountFrame::applySigners(Database& db, bool insert)
                 std::string signerStrKey = KeyUtils::toStrKey(it_new->key);
                 auto timer = db.getUpdateTimer("signer");
                 auto prep2 = db.getPreparedStatement(
-                    "UPDATE signers set weight=:v1, WHERE "
-                    // "UPDATE signers set weight=:v1, signertype = :st WHERE "
+                    "UPDATE signers set weight=:v1 WHERE "
                     "accountid=:v2 AND publickey=:v3");
                 auto& st = prep2.statement();
                 st.exchange(use(it_new->weight));
-                // st.exchange(use(it_new->signerType));
                 st.exchange(use(actIDStrKey));
                 st.exchange(use(signerStrKey));
                 st.define_and_bind();
@@ -586,14 +580,12 @@ AccountFrame::applySigners(Database& db, bool insert)
             std::string signerStrKey = KeyUtils::toStrKey(it_new->key);
 
             auto prep2 = db.getPreparedStatement("INSERT INTO signers "
-                                                 // "(accountid,publickey,weight,signertype) "
                                                  "(accountid,publickey,weight) "
-                                                 "VALUES (:v1,:v2,:v3,:st)");
+                                                 "VALUES (:v1,:v2,:v3)");
             auto& st = prep2.statement();
             st.exchange(use(actIDStrKey));
             st.exchange(use(signerStrKey));
             st.exchange(use(it_new->weight));
-            // st.exchange(use(it_new->signerType));
             st.define_and_bind();
             st.execute(true);
 

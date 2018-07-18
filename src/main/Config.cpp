@@ -50,7 +50,7 @@ Config::Config() : NODE_SEED(SecretKey::random())
     VERSION_STR = STELLAR_CORE_VERSION;
 
     // configurable
-    RUN_STANDALONE = false;
+    RUN_STANDALONE = true;
     MANUAL_CLOSE = false;
     CATCHUP_COMPLETE = false;
     CATCHUP_RECENT = 0;

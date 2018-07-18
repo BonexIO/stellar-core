@@ -203,14 +203,13 @@ LedgerManager::genesisLedger()
 void
 LedgerManagerImpl::startNewLedger(LedgerHeader genesisLedger)
 {
+    uint32 Foundation = 0;
     DBTimeExcluder qtExclude(mApp);
     auto ledgerTime = mLedgerClose.TimeScope();
     SecretKey skey = SecretKey::fromSeed(mApp.getNetworkID());
 
-    // AccountFrame masterAccount(skey.getPublicKey());
-    AccountFrame masterAccount(skey.getPublicKey(), 0);
+    AccountFrame masterAccount(skey.getPublicKey(), Foundation);
     masterAccount.getAccount().balance = genesisLedger.totalCoins;
-    // masterAccount.getAccount().accountType = 0;
     LedgerDelta delta(genesisLedger, getDatabase());
     masterAccount.storeAdd(delta, this->getDatabase());
     delta.commit();
@@ -224,6 +223,7 @@ LedgerManagerImpl::startNewLedger(LedgerHeader genesisLedger)
 void
 LedgerManagerImpl::startNewLedger()
 {
+    cout << "\nNew ledger started\n";
     auto ledger = genesisLedger();
     auto const& cfg = mApp.getConfig();
     if (cfg.USE_CONFIG_FOR_GENESIS)

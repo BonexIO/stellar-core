@@ -40,6 +40,7 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
 {
     AccountFrame::pointer destAccount;
 
+    cout << "\nFinally in account creation\n";
     Database& db = ledgerManager.getDatabase();
 
     destAccount =
@@ -60,14 +61,7 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
 
 
 
-        // AccountFrame::pointer const lSourceAcc = getSourceAccount();
-//        if(mSourceAccount->getAccount().accountType > mCreateAccount.accountType)
-        cout << "mSourceAccount TYPE: " << mSourceAccount->getAccount().accountType << " end of line\n";
-        // cout << "mSourceAccount key: " << getSourceID().ed25519 << " end of line\n";
-        cout << "mCreateAccount TYPE: " << mCreateAccount.accountType << " end of line\n";
-        if(mSourceAccount->getAccount().accountType == CLIENT
-            || (mSourceAccount->getAccount().accountType == MERCHANT && (mCreateAccount.accountType == FOUNDATION || mCreateAccount.accountType == VENDOR))
-            || (mSourceAccount->getAccount().accountType == VENDOR && mCreateAccount.accountType == FOUNDATION) )
+        if(mSourceAccount->getAccount().accountType >= mCreateAccount.accountType)
         {
             app.getMetrics()
                 .NewMeter({"op-create-account", "failure", "underauthorized"}, 
@@ -139,17 +133,6 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
 bool
 CreateAccountOpFrame::doCheckValid(Application& app)
 {
-    if(mSourceAccount->getAccountType() > mCreateAccount.accountType)
-    {
-        app.getMetrics()
-            .NewMeter({"op-create-account", "invalid", "underauthorized"}, 
-                    "operation")
-            .Mark();
-        innerResult().code(CREATE_ACCOUNT_UNDERAUTHORIZED);
-        return false;
-    }
-
-
     if (mCreateAccount.startingBalance <= 0)
     {
         app.getMetrics()
