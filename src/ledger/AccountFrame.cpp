@@ -26,7 +26,7 @@ const char* AccountFrame::kSQLCreateStatement1 =
     "CREATE TABLE accounts"
     "("
     "accountid       VARCHAR(56)  PRIMARY KEY,"
-    "accounttype     INT          NOT NULL CHECK (accounttype >= 0 AND accounttype <= 3),"
+    "accounttype     BIGINT       NOT NULL CHECK (accounttype >= 0 AND accounttype <= 7),"
     "balance         BIGINT       NOT NULL CHECK (balance >= 0),"
     "seqnum          BIGINT       NOT NULL,"
     "numsubentries   INT          NOT NULL CHECK (numsubentries >= 0),"
@@ -78,7 +78,7 @@ AccountFrame::AccountFrame(AccountID const& id) : AccountFrame()
     mAccountEntry.accountID = id;
 }
 
-AccountFrame::AccountFrame(AccountID const& id, uint32 accountType) : AccountFrame()
+AccountFrame::AccountFrame(AccountID const& id, AccountType accountType) : AccountFrame()
 {
     mAccountEntry.accountID = id;
     mAccountEntry.accountType = accountType;
@@ -95,7 +95,7 @@ AccountFrame::makeAuthOnlyAccount(AccountID const& id)
     return ret;
 }
 
-uint32
+AccountType
 AccountFrame::getAccountType() 
 {
     return mAccountEntry.accountType;
@@ -246,8 +246,11 @@ AccountFrame::loadAccount(AccountID const& accountID, Database& db)
                                 "inflationdest, homedomain, thresholds, "
                                 "flags, lastmodified "
                                 "FROM accounts WHERE accountid=:v1");
+
+    uint32 accountType = (uint32) account.accountType;
+    
     auto& st = prep.statement();
-    st.exchange(into(account.accountType));
+    st.exchange(into(accountType));
     st.exchange(into(account.balance));
     st.exchange(into(account.seqNum));
     st.exchange(into(account.numSubEntries));

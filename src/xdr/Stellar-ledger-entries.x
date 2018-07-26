@@ -48,8 +48,12 @@ enum AccountType
 {
     FOUNDATION = 0,
     VENDOR = 1,
-    MERCHANT = 2,
-    CLIENT = 3
+    OPERATOR = 2,
+    NODE = 3,
+    BRAND = 4,
+    MERCHANT = 5,
+    FRIENDBOT = 6,
+    CLIENT = 7
 };
 
 
@@ -120,7 +124,7 @@ struct AccountEntry
     AccountID* inflationDest; // Account to vote for during inflation
     uint32 flags;             // see AccountFlags
 
-    uint32 accountType;           // Account role
+    AccountType accountType;           // Account role
 
     string32 homeDomain; // can be used for reverse federation and memo lookup
 

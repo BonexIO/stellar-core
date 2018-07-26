@@ -130,6 +130,34 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
     }
 }
 
+
+// bool 
+// CreateAccountOpFrame::validateAccountTypes(AccountFrame::pointer mSourceAccount, AccountFrame::pointer mCreateAccount) {
+//     // switch(mSourceAccount->getAccount().accountType) 
+//     // {
+//     //     case CLIENT:
+//     //         return false;
+//     //     case FRIENDBOT:
+//     //         if(mSourceAccount->getAccountType() != CLIENT) 
+//     //             return false;
+//     //     case 
+//     // }
+
+//     if(mSourceAccount->getAccountType() != FRIENDBOT && mSourceAccount->getAccountType() != FOUNDATION) 
+//     {
+//         return false;
+//     }
+//     switch(mSourceAccount->getAccountType())
+//     {
+//         AccountType mSourceType = mSourceAccount->getAccountType();
+//         case (!FRIENDBOT && !FOUNDATION):
+//             return false;
+//         case FRIENDBOT
+//     }
+//     return true;
+// }
+
+
 bool
 CreateAccountOpFrame::doCheckValid(Application& app)
 {

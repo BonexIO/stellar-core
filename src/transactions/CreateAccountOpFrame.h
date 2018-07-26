@@ -26,6 +26,8 @@ class CreateAccountOpFrame : public OperationFrame
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 
+    // bool validateAccountTypes(AccountFrame::pointer mSourceAccount, CreateAccountOp const& mCreateAccount) override;
+
     static CreateAccountResultCode
     getInnerCode(OperationResult const& res)
     {
