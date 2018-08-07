@@ -203,11 +203,12 @@ LedgerManager::genesisLedger()
 void
 LedgerManagerImpl::startNewLedger(LedgerHeader genesisLedger)
 {
+    uint32 Foundation = 0;
     DBTimeExcluder qtExclude(mApp);
     auto ledgerTime = mLedgerClose.TimeScope();
     SecretKey skey = SecretKey::fromSeed(mApp.getNetworkID());
 
-    AccountFrame masterAccount(skey.getPublicKey(), FOUNDATION);
+    AccountFrame masterAccount(skey.getPublicKey(), Foundation);
     masterAccount.getAccount().balance = genesisLedger.totalCoins;
     LedgerDelta delta(genesisLedger, getDatabase());
     masterAccount.storeAdd(delta, this->getDatabase());
