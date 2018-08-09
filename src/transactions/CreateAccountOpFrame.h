@@ -24,6 +24,8 @@ class CreateAccountOpFrame : public OperationFrame
 
     bool doApply(Application& app, LedgerDelta& delta,
                  LedgerManager& ledgerManager) override;
+
+    bool validateAccountTypes();
     bool doCheckValid(Application& app) override;
 
     static CreateAccountResultCode

@@ -59,19 +59,19 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
             then validation failed
         */
 
-
-
-        if(mSourceAccount->getAccount().accountType >= mCreateAccount.accountType)
+        if(!validateAccountTypes())
         {
             app.getMetrics()
-                .NewMeter({"op-create-account", "failure", "underauthorized"}, 
+                .NewMeter({"op-create-account", "failure", "underauthorized"},
                         "operation")
                 .Mark();
             innerResult().code(CREATE_ACCOUNT_UNDERAUTHORIZED);
+
             return false;
         }
 
-        else if (mCreateAccount.startingBalance < ledgerManager.getMinBalance(0))
+
+        if (mCreateAccount.startingBalance < ledgerManager.getMinBalance(0))
         { // not over the minBalance to make an account
             app.getMetrics()
                 .NewMeter({"op-create-account", "failure", "low-reserve"},
@@ -128,6 +128,19 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
         innerResult().code(CREATE_ACCOUNT_ALREADY_EXIST);
         return false;
     }
+}
+
+bool
+CreateAccountOpFrame::validateAccountTypes()
+{
+    if(mSourceAccount->getAccount().accountType >= mCreateAccount.accountType)
+        {
+
+            return false;
+    }
+
+    return true;
+
 }
 
 bool
