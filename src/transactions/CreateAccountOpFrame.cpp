@@ -133,13 +133,16 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
 bool
 CreateAccountOpFrame::validateAccountTypes()
 {
-    if(mSourceAccount->getAccount().accountType >= mCreateAccount.accountType)
-        {
-
-            return false;
+    uint32 sourceType = mSourceAccount->getAccount().accountType;
+    uint32 destType = mCreateAccount.accountType;
+    if(     (sourceType == FOUNDATION && destType == LBO)
+        ||  (sourceType == LBO && destType == ISSUER)
+        ||  (destType == CLIENT)   )
+    {
+        return true;
     }
 
-    return true;
+    return false;
 
 }
 

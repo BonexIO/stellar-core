@@ -47,9 +47,10 @@ case ASSET_TYPE_CREDIT_ALPHANUM12:
 enum AccountType 
 {
     FOUNDATION = 0,
-    VENDOR = 1,
-    MERCHANT = 2,
-    CLIENT = 3
+    OPERATOR = 1,
+    LBO = 2,
+    ISSUER = 3,
+    CLIENT = 4
 };
 
 
