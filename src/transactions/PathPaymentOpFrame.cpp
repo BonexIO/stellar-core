@@ -4,6 +4,8 @@
 
 #include "util/asio.h"
 #include "transactions/PathPaymentOpFrame.h"
+#include "transactions/CreateAccountOpFrame.h"
+#include "transactions/ChangeTrustOpFrame.h"
 #include "OfferExchange.h"
 #include "database/Database.h"
 #include "ledger/LedgerDelta.h"
@@ -29,6 +31,93 @@ PathPaymentOpFrame::PathPaymentOpFrame(Operation const& op,
     , mPathPayment(mOperation.body.pathPaymentOp())
 {
 }
+
+
+TrustFrame::pointer PathPaymentOpFrame::getCommissionDest(LedgerManager const& ledgerManager, LedgerDelta& delta, Database& db,
+	AccountFrame::pointer commissionDest, Asset& asset) {
+	auto commissionDestLine = TrustFrame::loadTrustLine(commissionDest->getID(), asset, db, &delta);
+
+	if (!commissionDestLine)
+	{
+		//this trust line doesn't exist, lets add it
+		commissionDestLine = std::make_shared<TrustFrame>();
+		auto& tl = commissionDestLine->getTrustLine();
+		tl.accountID = commissionDest->getID();
+		tl.asset = asset;
+		tl.limit = INT64_MAX;
+		tl.balance = 0;
+		auto issuer = AccountFrame::loadAccount(delta, getIssuer(asset), db);
+		assert(!!issuer);
+		commissionDestLine->setAuthorized(!issuer->isAuthRequired());
+
+		if (!commissionDest->addNumEntries(1, ledgerManager))
+		{
+			return nullptr;
+		}
+
+		commissionDest->storeChange(delta, db);
+		commissionDestLine->storeAdd(delta, db);
+	}
+
+	return commissionDestLine;
+}
+
+AccountFrame::pointer
+PathPaymentOpFrame::createDestination(Application& app, LedgerManager& ledgerManager, LedgerDelta& delta) {
+	// build a createAccountOp
+	Operation op;
+	op.sourceAccount = mOperation.sourceAccount;
+	op.body.type(CREATE_ACCOUNT);
+	CreateAccountOp& caOp = op.body.createAccountOp();
+	caOp.destination = mPathPayment.destination;
+	caOp.accountType = CLIENT;
+    caOp.startingBalance = 20;
+    
+
+	OperationResult opRes;
+	opRes.code(opINNER);
+	opRes.tr().type(CREATE_ACCOUNT);
+
+	//no need to take fee twice
+	// OperationFee fee;
+	// fee.type(OperationFeeType::opFEE_NONE);
+
+	CreateAccountOpFrame createAccount(op, opRes, mParentTx);
+	createAccount.setSourceAccountPtr(mSourceAccount);
+
+	// create account
+	if (!createAccount.doCheckValid(app) ||
+		!createAccount.doApply(app, delta, ledgerManager))
+	{
+		if (createAccount.getResultCode() != opINNER)
+		{
+			throw std::runtime_error("Unexpected error code from createAccount");
+		}
+		switch (CreateAccountOpFrame::getInnerCode(createAccount.getResult()))
+		{
+		case CREATE_ACCOUNT_UNDERFUNDED:
+		case CREATE_ACCOUNT_LOW_RESERVE:
+		case CREATE_ACCOUNT_UNDERAUTHORIZED:
+			return nullptr;
+		case CREATE_ACCOUNT_MALFORMED:
+			app.getMetrics().NewMeter({ "op-path-payment", "failure", "malformed-create-account-op" },
+				"operation").Mark();
+			throw std::runtime_error("Failed to create account - create account op is malformed");
+		case CREATE_ACCOUNT_ALREADY_EXIST:
+			app.getMetrics().NewMeter({ "op-path-payment", "failure", "already-exists-create-account-op" },
+				"operation").Mark();
+			throw std::runtime_error("Failed to create account - already exists");
+		// case CREATE_ACCOUNT_WRONG_TYPE:
+		// 	app.getMetrics().NewMeter({ "op-path-payment", "failure", "wrong-type-create-account-op" },
+		// 		"operation").Mark();
+		// 	throw std::runtime_error("Failed to create account - wrong type");
+		default:
+			throw std::runtime_error("Unexpected error code from createAccount");
+		}
+	}
+	return createAccount.getDestAccount();
+}
+
 
 bool
 PathPaymentOpFrame::doApply(Application& app, LedgerDelta& delta,
@@ -62,6 +151,28 @@ PathPaymentOpFrame::doApply(Application& app, LedgerDelta& delta,
                         (getIssuer(curB) == mPathPayment.destination);
 
     AccountFrame::pointer destination;
+
+    destination =
+    AccountFrame::loadAccount(delta, mPathPayment.destination, db);
+    
+    if (!destination)
+    {
+        destination = createDestination(app, ledgerManager, delta);
+        bool destinationCreated = !!destination;
+        // if destination was created and asset is not native - create trust line
+        if (destinationCreated && curB.type() != ASSET_TYPE_NATIVE)
+        {
+            auto line = OperationFrame::createTrustLine(app, ledgerManager, delta, mParentTx, destination, mPathPayment.destAsset);
+            destinationCreated = !!line;
+        }
+        if (!destinationCreated)
+        {
+            app.getMetrics().NewMeter({ "op-path-payment", "failure", "no-destination" },
+                                      "operation").Mark();
+            innerResult().code(PATH_PAYMENT_NO_DESTINATION);
+            return false;
+        }
+    }
 
     if (!bypassIssuerCheck)
     {

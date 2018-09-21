@@ -1,6 +1,7 @@
 #pragma once
 
 #include "transactions/OperationFrame.h"
+#include "ledger/TrustFrame.h"
 
 // Copyright 2014 Stellar Development Foundation and contributors. Licensed
 // under the Apache License, Version 2.0. See the COPYING file at the root
@@ -16,6 +17,7 @@ class ChangeTrustOpFrame : public OperationFrame
         return mResult.tr().changeTrustResult();
     }
     ChangeTrustOp const& mChangeTrust;
+	TrustFrame::pointer mTrustLine;
 
   public:
     ChangeTrustOpFrame(Operation const& op, OperationResult& res,
@@ -24,6 +26,10 @@ class ChangeTrustOpFrame : public OperationFrame
     bool doApply(Application& app, LedgerDelta& delta,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
+
+    TrustFrame::pointer getTrustLine() {
+		return mTrustLine;
+	}
 
     static ChangeTrustResultCode
     getInnerCode(OperationResult const& res)

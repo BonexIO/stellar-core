@@ -6,6 +6,7 @@
 
 #include "ledger/AccountFrame.h"
 #include "ledger/LedgerManager.h"
+#include "ledger/TrustFrame.h"
 #include "overlay/StellarXDR.h"
 #include "util/types.h"
 #include <memory>
@@ -49,6 +50,9 @@ class OperationFrame
     virtual bool isVersionSupported(uint32_t protocolVersion) const;
 
   public:
+
+    static TrustFrame::pointer createTrustLine(Application& app, LedgerManager& ledgerManager, LedgerDelta& delta, TransactionFrame& parentTx, AccountFrame::pointer account, Asset const& asset);
+
     static std::shared_ptr<OperationFrame>
     makeHelper(Operation const& op, OperationResult& res,
                TransactionFrame& parentTx);

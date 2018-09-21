@@ -26,7 +26,7 @@ const char* AccountFrame::kSQLCreateStatement1 =
     "CREATE TABLE accounts"
     "("
     "accountid       VARCHAR(56)  PRIMARY KEY,"
-    "accounttype     INT          NOT NULL CHECK (accounttype >= 0 AND accounttype <= 3),"
+    "accounttype     INT          NOT NULL CHECK (accounttype >= 0 AND accounttype <= 4),"
     "balance         BIGINT       NOT NULL CHECK (balance >= 0),"
     "seqnum          BIGINT       NOT NULL,"
     "numsubentries   INT          NOT NULL CHECK (numsubentries >= 0),"

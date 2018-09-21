@@ -18,6 +18,8 @@ class CreateAccountOpFrame : public OperationFrame
     }
     CreateAccountOp const& mCreateAccount;
 
+	AccountFrame::pointer mDestAccount;
+
   public:
     CreateAccountOpFrame(Operation const& op, OperationResult& res,
                          TransactionFrame& parentTx);
@@ -27,6 +29,10 @@ class CreateAccountOpFrame : public OperationFrame
 
     bool validateAccountTypes();
     bool doCheckValid(Application& app) override;
+
+    AccountFrame::pointer getDestAccount() {
+		return mDestAccount;
+	}
 
     static CreateAccountResultCode
     getInnerCode(OperationResult const& res)

@@ -236,4 +236,53 @@ OperationFrame::checkValid(SignatureChecker& signatureChecker, Application& app,
 
     return doCheckValid(app);
 }
+
+TrustFrame::pointer
+OperationFrame::createTrustLine(Application& app, LedgerManager& ledgerManager, LedgerDelta& delta, TransactionFrame& parentTx, AccountFrame::pointer account, Asset const& asset)
+{
+	// build a changeTrustOp
+	Operation op;
+	op.sourceAccount.activate() = account->getID();
+	op.body.type(CHANGE_TRUST);
+
+	ChangeTrustOp& caOp = op.body.changeTrustOp();
+	caOp.limit = INT64_MAX;
+	caOp.line = asset;
+
+	OperationResult opRes;
+	opRes.code(opINNER);
+	opRes.tr().type(CHANGE_TRUST);
+
+	//no need to take fee twice
+	// OperationFee fee;
+	// fee.type(OperationFeeType::opFEE_NONE);
+
+	ChangeTrustOpFrame changeTrust(op, opRes, parentTx);
+	changeTrust.setSourceAccountPtr(account);
+
+	// create trust line
+	if (!changeTrust.doCheckValid(app) ||
+		!changeTrust.doApply(app, delta, ledgerManager))
+	{
+		if (changeTrust.getResultCode() != opINNER)
+		{
+			throw std::runtime_error("Unexpected error code from changeTrust");
+		}
+		switch (ChangeTrustOpFrame::getInnerCode(changeTrust.getResult()))
+		{
+		case CHANGE_TRUST_NO_ISSUER:
+		case CHANGE_TRUST_LOW_RESERVE:
+			return nullptr;
+		case CHANGE_TRUST_MALFORMED:
+			app.getMetrics().NewMeter({ "op", "failure", "malformed-change-trust-op" }, "operation").Mark();
+			throw std::runtime_error("Failed to create trust line - change trust line op is malformed");
+		case CHANGE_TRUST_INVALID_LIMIT:
+			app.getMetrics().NewMeter({ "op", "failure", "invalid-limit-change-trust-op" }, "operation").Mark();
+			throw std::runtime_error("Failed to create trust line - invalid limit");
+		default:
+			throw std::runtime_error("Unexpected error code from change trust line");
+		}
+	}
+	return changeTrust.getTrustLine();
+}
 }

@@ -38,14 +38,11 @@ bool
 CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
                               LedgerManager& ledgerManager)
 {
-    AccountFrame::pointer destAccount;
-
-    cout << "\nFinally in account creation\n";
     Database& db = ledgerManager.getDatabase();
 
-    destAccount =
+    mDestAccount =
         AccountFrame::loadAccount(delta, mCreateAccount.destination, db);
-    if (!destAccount)
+    if (!mDestAccount)
     {
         
         /*
@@ -70,8 +67,8 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
             return false;
         }
 
-
-        if (mCreateAccount.startingBalance < ledgerManager.getMinBalance(0))
+//         if (mCreateAccount.startingBalance < ledgerManager.getMinBalance(0))
+        if (mCreateAccount.startingBalance < 10)
         { // not over the minBalance to make an account
             app.getMetrics()
                 .NewMeter({"op-create-account", "failure", "low-reserve"},
@@ -102,14 +99,13 @@ CreateAccountOpFrame::doApply(Application& app, LedgerDelta& delta,
 
             mSourceAccount->storeChange(delta, db);
 
-            destAccount = make_shared<AccountFrame>(mCreateAccount.destination);
-            destAccount->getAccount().seqNum =
+            mDestAccount = make_shared<AccountFrame>(mCreateAccount.destination);
+            mDestAccount->getAccount().seqNum =
                 delta.getHeaderFrame().getStartingSequenceNumber();
-            destAccount->getAccount().balance = mCreateAccount.startingBalance;
-            destAccount->getAccount().accountType = mCreateAccount.accountType;
-            cout << "destAccount type: " << destAccount->getAccount().accountType << " end of line\n";
+            mDestAccount->getAccount().balance = mCreateAccount.startingBalance;
+            mDestAccount->getAccount().accountType = mCreateAccount.accountType;
 
-            destAccount->storeAdd(delta, db);
+            mDestAccount->storeAdd(delta, db);
 
             app.getMetrics()
                 .NewMeter({"op-create-account", "success", "apply"},
@@ -136,8 +132,10 @@ CreateAccountOpFrame::validateAccountTypes()
     uint32 sourceType = mSourceAccount->getAccount().accountType;
     uint32 destType = mCreateAccount.accountType;
     if(     (sourceType == FOUNDATION && destType == LBO)
+        ||  (sourceType == FOUNDATION && destType == OPERATOR)
+        ||  (sourceType == FOUNDATION && destType == ISSUER)
         ||  (sourceType == LBO && destType == ISSUER)
-        ||  (destType == CLIENT)   )
+        ||  (destType  == CLIENT) )
     {
         return true;
     }

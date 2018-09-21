@@ -5,6 +5,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "transactions/OperationFrame.h"
+#include "ledger/TrustFrame.h"
 
 namespace stellar
 {
@@ -21,6 +22,12 @@ class PathPaymentOpFrame : public OperationFrame
   public:
     PathPaymentOpFrame(Operation const& op, OperationResult& res,
                        TransactionFrame& parentTx);
+    
+    TrustFrame::pointer getCommissionDest(LedgerManager const& ledgerManager, LedgerDelta& delta, Database& db,
+	AccountFrame::pointer commissionDest, Asset& asset);
+
+    AccountFrame::pointer
+createDestination(Application& app, LedgerManager& ledgerManager, LedgerDelta& delta);
 
     bool doApply(Application& app, LedgerDelta& delta,
                  LedgerManager& ledgerManager) override;
