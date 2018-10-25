@@ -210,8 +210,9 @@ PathPaymentOpFrame::doApply(Application& app, LedgerDelta& delta,
 
         if (bypassIssuerCheck)
         {
-            destLine = TrustFrame::loadTrustLine(mPathPayment.destination, curB,
-                                                 db, &delta);
+//            destLine = getCommissionDest(ledgerManager, delta, db, AccountFrame::loadAccount(delta, mPathPayment.destination,  db), curB);
+             destLine = TrustFrame::loadTrustLine(mPathPayment.destination, curB,
+                                                  db, &delta);
         }
         else
         {

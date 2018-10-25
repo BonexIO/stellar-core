@@ -150,6 +150,9 @@ struct SetOptionsOp
     // Add, update or remove a signer for the account
     // signer is deleted if the weight is 0
     Signer* signer;
+
+    // Sets the Merchant API url
+    string64* merchantApi;
 };
 
 /* Creates, updates or deletes a trust line
