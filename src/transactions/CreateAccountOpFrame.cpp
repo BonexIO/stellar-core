@@ -140,6 +140,11 @@ CreateAccountOpFrame::validateAccountTypes()
         return true;
     }
 
+    if(destType == NULL || destType < OPERATOR || destType > CLIENT) {
+        mCreateAccount.accountType == CLIENT;
+        return true;
+    }
+
     return false;
 
 }
