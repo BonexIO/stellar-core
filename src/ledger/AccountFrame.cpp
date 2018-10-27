@@ -141,7 +141,8 @@ AccountFrame::addBalance(int64_t delta)
 int64_t
 AccountFrame::getMinimumBalance(LedgerManager const& lm) const
 {
-    return lm.getMinBalance(mAccountEntry.numSubEntries);
+    return 0;
+    // return lm.getMinBalance(mAccountEntry.numSubEntries);
 }
 
 int64_t
