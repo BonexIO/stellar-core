@@ -230,7 +230,10 @@ PathPaymentOpFrame::doApply(Application& app, LedgerDelta& delta,
             }
             destLine = tlI.first;
         }
-
+        if(!destLine)
+        {
+            destLine = OperationFrame::createTrustLine(app, ledgerManager, delta, mParentTx, destination, mPathPayment.destAsset);   
+        }
         if (!destLine)
         {
             app.getMetrics()
@@ -421,7 +424,20 @@ PathPaymentOpFrame::doApply(Application& app, LedgerDelta& delta,
                 innerResult().noIssuer() = curB;
                 return false;
             }
-            sourceLineFrame = tlI.first;
+            bool sourceLineExists = !!tlI.first;
+            if (!sourceLineExists)
+            {
+                if (getSourceID() == getIssuer(curB))
+                {
+                    auto line = OperationFrame::createTrustLine(app, ledgerManager, delta, mParentTx, mSourceAccount, curB);
+                    sourceLineExists = !!line;
+                    sourceLineFrame = line;
+                }
+            }
+            else
+            {
+                sourceLineFrame = tlI.first;
+            }
         }
 
         if (!sourceLineFrame)
