@@ -29,7 +29,7 @@ ChangeTrustOpFrame::doApply(Application& app, LedgerDelta& delta,
     auto tlI = TrustFrame::loadTrustLineIssuer(getSourceID(), mChangeTrust.line,
                                                db, delta);
 
-    auto& mTrustLine = tlI.first;
+    mTrustLine = tlI.first;
     auto& issuer = tlI.second;
 
     if (app.getLedgerManager().getCurrentLedgerVersion() > 2)
