@@ -176,9 +176,6 @@ PathPaymentOpFrame::doApply(Application& app, LedgerDelta& delta,
 
     if (!bypassIssuerCheck)
     {
-        destination =
-            AccountFrame::loadAccount(delta, mPathPayment.destination, db);
-
         if (!destination)
         {
             app.getMetrics()
